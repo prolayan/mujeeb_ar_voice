@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مجيب - المساعد الصوتي العربي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 50%, #2c5282 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #4a5568;
+            border-radius: 24px;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.15);
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 36px;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: #e2e8f0;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .mic-container {
+            margin: 40px 0;
+        }
+
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 24px rgba(26, 54, 93, 0.3);
+            margin-bottom: 24px;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 16px 32px rgba(26, 54, 93, 0.4);
+        }
+
+        .mic-button.listening {
+            background: linear-gradient(135deg, #E53E3E 0%, #FC8181 100%);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 12px 24px rgba(229, 62, 62, 0.3);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .status {
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 32px;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.idle {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .status.listening {
+            background: #FED7D7;
+            color: #C53030;
+        }
+
+        .status.processing {
+            background: #FEFCBF;
+            color: #D69E2E;
+        }
+
+        .status.speaking {
+            background: #C6F6D5;
+            color: #2F855A;
+        }
+
+        .output {
+            margin: 24px 0;
+            padding: 20px;
+            background: #2d3748;
+            border-radius: 16px;
+            min-height: 80px;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .output-text {
+            color: #e2e8f0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .controls {
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn.repeat {
+            background: #48BB78;
+            color: white;
+        }
+
+        .control-btn.mute {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .commands {
+            margin-top: 32px;
+            text-align: right;
+        }
+
+        .commands-title {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .command-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .command-list li {
+            padding: 8px 0;
+            color: white;
+            border-bottom: 1px solid #2d3748;
+            font-size: 14px;
+        }
+
+        .command-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🎤 مجيب</h1>
+            <p class="subtitle">المساعد الصوتي العربي</p>
+        </div>
+
+        <div class="mic-container">
+            <button class="mic-button" id="micButton" onclick="toggleListening()">
+                🎤
+            </button>
+        </div>
+
+        <div class="status idle" id="status">
+            اضغط على الميكروفون للبدء
+        </div>
+
+        <div class="output" id="output">
+            <div class="output-text" id="outputText">
+                مرحباً! أنا مجيب، مساعدك الصوتي العربي. اضغط على الميكروفون وابدأ بالتحدث.
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn repeat" onclick="speakLastResponse()">🔊 تكرار الرد</button>
+            <button class="control-btn mute" onclick="toggleSpeech()" id="speechToggle">🔇 إيقاف الصوت</button>
+        </div>
+
+        <div class="commands">
+            <div class="commands-title">📋 الأوامر المتاحة:</div>
+            <ul class="command-list">
+                <li>• "كم رصيدي" - عرض الرصيد</li>
+                <li>• "حول" أو "ارسل" - تحويل مبلغ</li>
+                <li>• "سدد فاتورة" - دفع فاتورة</li>
+                <li>• "مرحبا" - تحية</li>
+                <li>• "شكرا" - شكر</li>
+                <li>• "وداعا" - إنهاء البرنامج</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let isListening = false;
+        let recognition = null;
+        let speechEnabled = true;
+        let lastResponse = '';
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'ar-SA';
+
+                recognition.onstart = function() {
+                    updateStatus('listening', '🎤 أستمع إليك...');
+                    updateButton(true);
+                };
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    updateStatus('processing', '🔄 معالجة طلبك...');
+                    processCommand(transcript);
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    updateStatus('idle', '❌ خطأ في التعرف على الصوت. حاول مرة أخرى.');
+                    updateButton(false);
+                };
+
+                recognition.onend = function() {
+                    updateStatus('idle', 'اضغط على الميكروفون للبدء');
+                    updateButton(false);
+                };
+            } else {
+                updateStatus('idle', '❌ متصفحك لا يدعم التعرف على الصوت');
+            }
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+            } else {
+                recognition.start();
+                isListening = true;
+            }
+        }
+
+        function updateStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        function updateButton(listening) {
+            const button = document.getElementById('micButton');
+            if (listening) {
+                button.classList.add('listening');
+                button.textContent = '🔴';
+            } else {
+                button.classList.remove('listening');
+                button.textContent = '🎤';
+            }
+        }
+
+        function speakText(text) {
+            if (!speechEnabled) return;
+            
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const arabicVoice = voices.find(voice => 
+                voice.lang.includes('ar') || 
+                voice.name.includes('Arabic') ||
+                voice.name.includes('arabic')
+            );
+            
+            if (arabicVoice) {
+                utterance.voice = arabicVoice;
+            }
+            
+            utterance.onstart = function() {
+                updateStatus('speaking', '🔊 جاري التحدث...');
+            };
+            
+            utterance.onend = function() {
+                updateStatus('idle', 'اضغط على الميكروفون للبدء');
+            };
+            
+            utterance.onerror = function(event) {
+                console.error('Speech synthesis error:', event.error);
+                updateStatus('idle', '❌ خطأ في التحدث. حاول مرة أخرى.');
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakLastResponse() {
+            if (lastResponse) {
+                speakText(lastResponse);
+            }
+        }
+
+        function toggleSpeech() {
+            speechEnabled = !speechEnabled;
+            const button = document.getElementById('speechToggle');
+            
+            if (speechEnabled) {
+                button.textContent = '🔇 إيقاف الصوت';
+                button.className = 'control-btn mute';
+            } else {
+                button.textContent = '🔊 تشغيل الصوت';
+                button.className = 'control-btn repeat';
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function processCommand(text) {
+            const outputText = document.getElementById('outputText');
+            outputText.innerHTML = `<strong>أنت قلت:</strong> ${text}`;
+
+            setTimeout(() => {
+                const reply = getReply(text);
+                lastResponse = reply;
+                outputText.innerHTML = `<strong>أنت قلت:</strong> ${text}<br><br><strong>مجيب:</strong> ${reply}`;
+                
+                speakText(reply);
+            }, 1000);
+        }
+
+        function getReply(text) {
+            const commands = {
+                'كم رصيدي': 'رصيدك الحالي هو ١٥٬٠٠٠ ريال.',
+                'ما هو رصيدي': 'رصيدك الحالي هو ١٥٬٠٠٠ ريال.',
+                'ايش رصيدي': 'رصيدك الحالي هو ١٥٬٠٠٠ ريال.',
+                'حول': 'تم تحويل المبلغ بنجاح.',
+                'ارسل': 'تم تحويل المبلغ بنجاح.',
+                'سدد فاتورة': 'تم تسديد الفاتورة بنجاح.',
+                'ادفع فاتورة': 'تم تسديد الفاتورة بنجاح.',
+                'مرحبا': 'مرحباً بك في بنك الإنماء، كيف أقدر أخدمك؟',
+                'السلام عليكم': 'مرحباً بك في بنك الإنماء، كيف أقدر أخدمك؟',
+                'هلا': 'مرحباً بك في بنك الإنماء، كيف أقدر أخدمك؟',
+                'شكرا': 'العفو، في خدمتك دائماً.',
+                'شكراً': 'العفو، في خدمتك دائماً.',
+                'مشكور': 'العفو، في خدمتك دائماً.',
+                'وداعا': 'مع السلامة، نتمنى لك يوماً سعيداً.',
+                'مع السلامة': 'مع السلامة، نتمنى لك يوماً سعيداً.',
+                'باي': 'مع السلامة، نتمنى لك يوماً سعيداً.'
+            };
+
+            for (let command in commands) {
+                if (text.includes(command)) {
+                    return commands[command];
+                }
+            }
+
+            return 'عذراً، لم أفهم طلبك. جرب أمر آخر مثل "كم رصيدي" أو "مرحبا".';
+        }
+
+        window.onload = function() {
+            initSpeechRecognition();
+            
+            window.speechSynthesis.onvoiceschanged = function() {
+                console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
+            };
+        };
+    </script>
+</body>
+</html>
